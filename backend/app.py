@@ -1,4 +1,4 @@
-　from fastapi import FastAPI, File, UploadFile
+from fastapi import FastAPI, File, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
@@ -27,21 +27,18 @@ app.add_middleware(
 UPLOAD_DIR = "uploaded_receipts"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
-# ---------------------------------------------------------
 # 1. 静的ファイル（画面）の提供設定
-# ---------------------------------------------------------
-# frontendフォルダを /static というURLでアクセスできるようにする
 app.mount("/static", StaticFiles(directory="frontend"), name="static")
 
-# ルート（/）にアクセスしたら index.html を表示する
-@app.get-------
+@app.get("/")
+async def read_index():
+    return FileResponse('frontend/index.html')
+
 # 2. 画像アップロード用API
-# ---------------------------------------------------------
 @app.post("/api/ocr/upload")
 async def upload_receipt(file: UploadFile = File(...)):
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    filename = f"{timestamp}_{file.filename}"
-    file_path = os.path.join(UPLOAD_DIR, filename)
+    filename = f"{tiename)
 
     with open(file_path, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
@@ -53,6 +50,5 @@ async def upload_receipt(file: UploadFile = File(...)):
         "path": file_path
     }
 
-# 起動スイッチ
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=10000)
