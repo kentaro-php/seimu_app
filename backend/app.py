@@ -34,11 +34,10 @@ app.mount("/static", StaticFiles(directory="frontend"), name="static")
 async def read_index():
     return FileResponse('frontend/index.html')
 
-# 2. 画像アップロード用API
+# 2. 画像アップロード用API（ここが修正箇所です！）
 @app.post("/api/ocr/upload")
 async def upload_receipt(file: UploadFile = File(...)):
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    filename = f"{tiename)
+    timestamp = datetime.now().strftime("OAD_DIR, filename)
 
     with open(file_path, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
