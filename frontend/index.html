@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-    <meta charset="UTF-8">
+fetch('/api/ocr/upload'fetch('/api/ocr/upload'    <meta charset="UTF-8">
     <title>政務活動費アプリ</title>
 </head>
 <body>
@@ -10,7 +10,7 @@
     <p>バックエンドAPIの状態: <span id="status">確認中...</span></p>
 
     <script>
-        fetch('http://localhost:8000/')
+        fetch('/api/ocr/upload')
             .then(response => response.json())
             .then(data => {
                 document.getElementById('status').innerText = '接続成功: ' + JSON.stringify(data);
