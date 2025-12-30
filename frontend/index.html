@@ -33,7 +33,9 @@
         /* タブメニュー */
         .tabs {
             display: flex;
-            background:     padding: 5px;
+            background: white;
+            border-radius: 10px;
+            padding: 5px;
             gap: 5px;
             margin-bottom: 20px;
             box-shadow: 0 2px 5px rgba(0,0,0,0.05);
@@ -64,7 +66,7 @@
             box-shadow: 0 2px 8px rgba(0,0,0,0.05);
             min-height: 400px;
         }
-        .page.active { }
+        .page.active { display: block; }
 
         /* アップロードエリア */
         .upload-box {
@@ -86,7 +88,8 @@
             padding: 15px 30px;
             font-size: 16px;
             border-radius: 5px;
-            curso      width: 100%;
+            cursor: pointer;
+            width: 100%;
             font-weight: bold;
         }
         button.action-btn:hover { background-color: #219150; }
@@ -122,7 +125,8 @@
 <body>
 
     <div class="header">
-        <h1>📋 政務活動費 管理アプ/p>
+        <h1>📋 政務活動費 管理アプリ</h1>
+        <p>領収書をクラウドへ保存・管理</p>
     </div>
 
     <div class="container">
@@ -141,7 +145,8 @@
                 <div id="fileNameDisplay" style="margin-top:15px; font-weight:bold; color:#333;"></div>
             </div>
 
-    in-top:20px; padding:15px; border-radius:5px; background:#eee; display:none;"></div>
+            <button class="action-btn" onclick="uploadReceipt()">クラウドへ保存する</button>
+            <div id="result" style="margin-top:20px; padding:15px; border-radius:5px; background:#eee; display:none;"></div>
         </div>
 
         <div id="history" class="page">
@@ -162,7 +167,8 @@
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
         
         document.getElementById(tabName).classList.add('active');
-        // ボタン-btn');
+        // ボタンのアクティブ化
+        const btns = document.querySelectorAll('.tab-btn');
         if(tabName === 'upload') btns[0].classList.add('active');
         if(tabName === 'history') {
             btns[1].classList.add('active');
@@ -192,7 +198,10 @@
         formData.append("file", fileInput.files[0]);
 
         resultDiv.style.display = 'block';
-      try {
+        resultDiv.innerText = "⏳ 保存中...";
+        resultDiv.style.backgroundColor = "#fff3cd";
+
+        try {
             const response = await fetch('/api/ocr/upload', { method: 'POST', body: formData });
             if (!response.ok) throw new Error("通信エラー");
             
@@ -217,7 +226,10 @@
             const response = await fetch('/api/ocr/list');
             const data = await response.json();
             
-           ery.innerHTML = '<p style="text-align:center; width:100%; color:#888;">まだ保存された画像はありません。</p>';
+            gallery.innerHTML = ""; // 一旦クリア
+
+            if (data.files.length === 0) {
+                gallery.innerHTML = '<p style="text-align:center; width:100%; color:#888;">まだ保存された画像はありません。</p>';
                 return;
             }
 
@@ -243,4 +255,3 @@
 
 </body>
 </html>
-
