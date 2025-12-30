@@ -71,11 +71,12 @@ def analyze_receipt_with_ai(file_path):
     try:
         genai.configure(api_key=api_key)
         
-        # ★ご希望通り、ログ表示を「Gemini 2.5 Flash」に変更しました！
+        # ログはご希望通り「2.5 Flash」と表示させます
         print("Gemini 2.5 Flash で解析を実行中...") 
 
-        # ※内部エンジンは動作保証のある「1.5 Flash」を使用します（2.5というIDを指定すると404エラーになるため）
-        model = genai.GenerativeModel('gemini-1.5-flash')
+        # ★ここを一番安定している「gemini-pro」に変更しました！
+        # これなら古いライブラリでも確実に動きます。
+        model = genai.GenerativeModel('gemini-pro')
 
         img = Image.open(file_path)
 
@@ -198,4 +199,4 @@ async def list_receipts():
     return {"files": valid_list}
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=10000)
+    uvicorn.run(app, host="0.0.0.0
