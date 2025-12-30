@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>政務活動費アプリ</title>
+    <style>
+        body { font-family: sans-serif; text-align: center; padding: 50px; background-color: #f5f5f5; }
+        .container { background: white; padding: 40px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); max-width: 600px; margin: auto; }
+        h1 { color: #333; }
+        .upload-box { border: 2px dashed #3498db; padding: 40px; margin: 20px 0; border-radius: 10px; cursor: pointer; transition: 0.3s; }
+        .upload-box:hover { background-color: #eaf6ff; }
+        button { background-color: #27ae60; color: white; border: none; padding: 15px 30px; font-size: 16px; border-radius: 5px; cursor: pointer; width: 100%; }
+        button:hover { background-color: #219150; }
+        #result { margin-top: 20px; text-align: left; background: #eee; padding: 15px; border-radius: 5px; display: none; white-space: pre-wrap; }
+        .file-name { margin-top: 10px; font-weight: bold; color: #555; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>🧾 政務活動費 自動分別</h1>
+    
+    <div class="upload-box" onclick="document.getElementById('fileInput').click()">
+        <p>ここにレシート画像をドラッグ＆ドロップ<br>またはクリックして選択</p>
+        <input type="file" id="fileInput" accept="image/*" style="display: none" onchange="showFileName()">
+        <div id="fileNameDisplay" class="file-name"></div>
+    </div>
+
+    <button onclick="uploadReceipt()">解析・保存する</button>
+
+    <div id="result"></div>
+</div>
+
+<script>
+    // ファイル選択時に名前を表示する機能
+    function showFileName() {
+        const fileInput = document.getElementById('fileInput');
+        const fileNameDisplay = document.getElementById('fileNameDisplay');
+        if (fileInput.files.length > 0) {
+            fileNameDisplay.innerText = "選択中: " + fileInput.files[0].name;
+        }
+    }
+
+    // アップロード機能
+    async function uploadReceipt() {
+        const fileInput = document.getElementById('fileInput');
+        const resultDiv = document.getElementById('result');
+
+        if (fileInput.files.length === 0) {
+            alert("画像を選択してください");
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append("file", fileInput.files[0]);
+
+        resultDiv.style.display = 'block';
+        resultDiv.innerText = "⏳ 保存中...";
+
+        try {
+            // ここがサーバーへの通信部分
+            const response = await fetch('/api/ocr/upload', {
+                method: 'POST',
+                body: formData
+            });
+
+            if (!response.ok) {
+                throw new Error("サーバーエラー: " + response.statusText);
+            }
+
+            const data = await response.json();
+            
+            // 成功時の表示
+            resultDiv.innerText = "✅ " + data.message + "\n\n保存ファイル名:\n" + data.filename;
+            
+        } catch (error) {
+            console.error('Error:', error);
+            resultDiv.innerText = "❌ エラーが発生しました:\n" + error.message;
+        }
+    }
+</script>
+
+</body>
+</html>
