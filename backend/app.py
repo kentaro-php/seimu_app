@@ -37,7 +37,8 @@ async def read_index():
 # 2. 画像アップロード用API
 @app.post("/api/ocr/upload")
 async def upload_receipt(file: UploadFile = File(...)):
-    timestamp = datetifilename}"
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    filename = f"{timestamp}_{file.filename}"
     file_path = os.path.join(UPLOAD_DIR, filename)
 
     with open(file_path, "wb") as buffer:
