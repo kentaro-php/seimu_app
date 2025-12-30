@@ -186,24 +186,35 @@
             document.getElementById('currentCriteria').innerText = data.criteria_file;
         }
 
-        // --- アップロード処理 ---
+        // --- アップロード処理（AI解析対応） ---
         async function uploadReceipt() {
             const file = document.getElementById('fileInput').files[0];
             if (!file) return;
             const formData = new FormData();
             formData.append("file", file);
 
+            // ★ここがAIのメッセージ！
+            alert("🤖 AIがレシートを解析しています...\n（10秒ほどお待ちください）");
+
             try {
                 const res = await fetch('/api/ocr/upload', { method: 'POST', body: formData });
-                const data = await res.json();
+                const json = await res.json();
                 
-                // アップロード成功後、すぐに編集モーダルを開く
-                alert("登録しました。詳細を入力してください。");
-                document.getElementById('fileInput').value = ""; // リセット
-                showView('list-view'); // 一覧へ移動
-                openModal({ filename: data.filename, amount: 0, category: '未分類', date: '', store: '', note: '' });
-
-            } catch(e) { alert("アップロード失敗"); }
+                if(json.status === "success") {
+                    const data = json.data;
+                    document.getElementById('fileInput').value = ""; // リセット
+                    
+                    // 一覧画面へ移動し、モーダルを開く
+                    showView('list-view');
+                    openModal(data);
+                    
+                    // 成功メッセージ
+                    alert(`✅ 解析完了！\n\n店名: ${data.store}\n金額: ${data.amount}円\n費目: ${data.category}\n\n内容を確認・修正して保存してください。`);
+                }
+            } catch(e) { 
+                console.error(e);
+                alert("❌ 解析に失敗しました"); 
+            }
         }
 
         // --- 一覧表示処理 ---
