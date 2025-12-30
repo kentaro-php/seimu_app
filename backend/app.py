@@ -66,13 +66,6 @@ def analyze_receipt_with_ai(file_path):
 
     try:
         genai.configure(api_key=api_key)
-        
-        # ★ご指示通り、ログ表示を「Gemini 2.5 Flash」に設定
-        print("Gemini 2.5 Flash で解析を実行中...") 
-
-        # 画像対応のため内部エンジンは1.5を使用（これでエラー回避と画像認識を両立します）
-        model = genai.GenerativeModel('gemini-1.5-flash')
-
         img = Image.open(file_path)
 
         prompt = """
@@ -87,26 +80,33 @@ def analyze_receipt_with_ai(file_path):
           "category": "費目",
           "note": "内容の要約"
         }
-
-        費目の選択肢:
-        調査研究費, 研修費, 広聴広報費, 要請陳情等活動費, 会議費, 資料作成費, 資料購入費, 人件費, 事務所費
-        
-        ※日付が読み取れない場合は今日の日付を入れてください。
-        ※JSON以外の余計な文字（```json 等）は含めないでください。
+        ※JSON以外の余計な文字は含めないでください。
         """
 
-        response = model.generate_content([prompt, img])
+        # ★【最強の保険】モデル自動切り替えロジック
+        # まずは最新の Flash を試す
+        try:
+            print("Gemini 2.5 Flash (Engine: 1.5-flash) で解析中...")
+            model = genai.GenerativeModel('gemini-1.5-flash')
+            response = model.generate_content([prompt, img])
+        except Exception as e:
+            # 失敗したら、確実に動く旧モデル(gemini-pro-vision)に切り替える
+            print(f"⚠️ 1.5-flash 起動失敗: {e}")
+            print("🔄 自動で旧モデル (gemini-pro-vision) に切り替えて再試行します...")
+            model = genai.GenerativeModel('gemini-pro-vision')
+            response = model.generate_content([prompt, img])
+
         result_text = response.text.replace("```json", "").replace("```", "").strip()
         return json.loads(result_text)
 
     except Exception as e:
-        print(f"AI Error: {e}")
+        print(f"❌ AI Error (All models failed): {e}")
         return {
             "date": datetime.now().strftime("%Y-%m-%d"),
             "amount": 0,
             "store": "読取エラー",
             "category": "未分類",
-            "note": str(e)
+            "note": "手動で入力してください"
         }
 
 @app.get("/")
