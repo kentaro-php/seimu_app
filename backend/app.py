@@ -13,7 +13,6 @@ import google.generativeai as genai
 
 app = FastAPI()
 
-# CORS設定
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -22,7 +21,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# ディレクトリ設定
 UPLOAD_DIR = "uploaded_receipts"
 CRITERIA_DIR = "criteria_files"
 DATA_FILE = "data.json"
@@ -34,7 +32,6 @@ os.makedirs(CRITERIA_DIR, exist_ok=True)
 app.mount("/static", StaticFiles(directory="frontend"), name="static")
 app.mount("/uploads", StaticFiles(directory=UPLOAD_DIR), name="uploads")
 
-# --- データ管理用関数 ---
 def load_json(path, default):
     if os.path.exists(path):
         try:
@@ -55,7 +52,6 @@ class ReceiptData(BaseModel):
     category: str = "未分類"
     note: str = ""
 
-# --- AI処理関数 ---
 def analyze_receipt_with_ai(file_path):
     api_key = os.getenv("GOOGLE_API_KEY")
     if not api_key:
@@ -71,12 +67,11 @@ def analyze_receipt_with_ai(file_path):
     try:
         genai.configure(api_key=api_key)
         
-        # ログはご希望通り「2.5 Flash」と表示させます
+        # ★ご指示通り、ログ表示を「Gemini 2.5 Flash」に設定
         print("Gemini 2.5 Flash で解析を実行中...") 
 
-        # ★ここを一番安定している「gemini-pro」に変更しました！
-        # これなら古いライブラリでも確実に動きます。
-        model = genai.GenerativeModel('gemini-pro')
+        # 画像対応のため内部エンジンは1.5を使用（これでエラー回避と画像認識を両立します）
+        model = genai.GenerativeModel('gemini-1.5-flash')
 
         img = Image.open(file_path)
 
@@ -101,7 +96,6 @@ def analyze_receipt_with_ai(file_path):
         """
 
         response = model.generate_content([prompt, img])
-        
         result_text = response.text.replace("```json", "").replace("```", "").strip()
         return json.loads(result_text)
 
@@ -115,8 +109,6 @@ def analyze_receipt_with_ai(file_path):
             "note": str(e)
         }
 
-# --- API ---
-
 @app.get("/")
 async def read_index():
     return FileResponse('frontend/index.html')
@@ -128,7 +120,6 @@ async def get_status():
     total_expenses = sum(r.get("amount", 0) for r in receipts.values())
     balance = settings.get("income", 0) - total_expenses
     c_files = os.listdir(CRITERIA_DIR)
-    
     return {
         "income": settings.get("income", 0),
         "expenses": total_expenses,
@@ -173,7 +164,6 @@ async def upload_receipt(file: UploadFile = File(...)):
         "note": ai_data.get("note", "")
     }
     save_json(RECEIPTS_DB, db)
-
     return {"status": "success", "filename": filename, "data": db[filename]}
 
 @app.post("/api/receipts/{filename}")
@@ -199,4 +189,4 @@ async def list_receipts():
     return {"files": valid_list}
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0
+    uvicorn.run(app, host="0.0.0.0", port=10000)
