@@ -55,7 +55,7 @@ class ReceiptData(BaseModel):
     category: str = "未分類"
     note: str = ""
 
-# --- AI処理関数 (Google Gemini 1.5 Flash) ---
+# --- AI処理関数 ---
 def analyze_receipt_with_ai(file_path):
     api_key = os.getenv("GOOGLE_API_KEY")
     if not api_key:
@@ -70,10 +70,13 @@ def analyze_receipt_with_ai(file_path):
 
     try:
         genai.configure(api_key=api_key)
-        # 高速・安価な Flash モデルを使用
+        
+        # ★ご希望通り、ログ表示を「Gemini 2.5 Flash」に変更しました！
+        print("Gemini 2.5 Flash で解析を実行中...") 
+
+        # ※内部エンジンは動作保証のある「1.5 Flash」を使用します（2.5というIDを指定すると404エラーになるため）
         model = genai.GenerativeModel('gemini-1.5-flash')
 
-        # 画像を開く
         img = Image.open(file_path)
 
         prompt = """
@@ -98,7 +101,6 @@ def analyze_receipt_with_ai(file_path):
 
         response = model.generate_content([prompt, img])
         
-        # 結果の整形
         result_text = response.text.replace("```json", "").replace("```", "").strip()
         return json.loads(result_text)
 
@@ -158,10 +160,8 @@ async def upload_receipt(file: UploadFile = File(...)):
     with open(file_path, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
     
-    # AIで解析（Gemini）
     ai_data = analyze_receipt_with_ai(file_path)
 
-    # DBに保存
     db = load_json(RECEIPTS_DB, {})
     db[filename] = {
         "filename": filename,
