@@ -4,271 +4,241 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>政務活動費 費目分別アプリ</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script> <style>
-        body {
-            font-family: 'Helvetica Neue', Arial, sans-serif;
-            background-color: #f4f7f6;
-            margin: 0;
-            padding: 0;
-            color: #333;
-        }
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { font-family: 'Helvetica Neue', Arial, sans-serif; background-color: #f4f7f6; margin: 0; padding: 0; color: #333; }
 
         /* ヘッダー */
-        .navbar {
-            background-color: #ffffff;
-            padding: 15px 30px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid #e0e0e0;
-        }
-        .logo {
-            display: flex;
-            align-items: center;
-            font-size: 1.2rem;
-            font-weight: bold;
-            color: #333;
-        }
+        .navbar { background-color: #ffffff; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e0e0e0; }
+        .logo { display: flex; align-items: center; font-size: 1.2rem; font-weight: bold; color: #333; }
         .logo span { margin-left: 10px; }
-        .user-info { font-size: 0.9rem; color: #666; }
-
-        /* メインコンテンツ */
-        .container {
-            max-width: 1000px;
-            margin: 40px auto;
-            padding: 0 20px;
-            text-align: center;
+        
+        /* 財務ステータスバー（新機能） */
+        .status-bar {
+            background: #2c3e50; color: white; padding: 15px; text-align: center;
+            display: flex; justify-content: center; gap: 40px; font-size: 1.1rem;
         }
+        .status-item span { font-size: 0.9rem; opacity: 0.8; margin-right: 5px; }
+        .status-item strong { font-size: 1.3rem; font-weight: bold; }
+        .balance-plus { color: #4cd137; } /* プラスなら緑 */
+        .balance-minus { color: #e74c3c; } /* マイナスなら赤 */
 
+        /* コンテナ */
+        .container { max-width: 1000px; margin: 40px auto; padding: 0 20px; text-align: center; }
         h1 { margin-bottom: 10px; font-size: 2rem; }
-        .subtitle { color: #666; margin-bottom: 40px; font-size: 0.95rem; line-height: 1.6; }
+        .subtitle { color: #666; margin-bottom: 40px; }
 
         /* カードグリッド */
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            gap: 20px;
-            margin-bottom: 40px;
-        }
-
-        .card {
-            background: white;
-            padding: 30px 20px;
-            border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-            transition: transform 0.2s;
-            text-align: left;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            min-height: 200px;
-        }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; margin-bottom: 40px; }
+        .card { background: white; padding: 30px 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); transition: transform 0.2s; text-align: left; display: flex; flex-direction: column; justify-content: space-between; min-height: 200px; }
         .card:hover { transform: translateY(-5px); }
-        
-        .icon-box {
-            width: 50px; height: 50px;
-            border-radius: 10px;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 1.5rem; margin-bottom: 15px;
-        }
+        .icon-box { width: 50px; height: 50px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; margin-bottom: 15px; }
         .bg-blue { background-color: #e3f2fd; color: #1976d2; }
         .bg-green { background-color: #e8f5e9; color: #388e3c; }
         .bg-purple { background-color: #f3e5f5; color: #7b1fa2; }
         .bg-orange { background-color: #fff3e0; color: #f57c00; }
 
-        .card h3 { margin: 0 0 10px 0; font-size: 1.1rem; }
-        .card p { font-size: 0.85rem; color: #666; margin-bottom: 20px; flex-grow: 1; }
-
-        .btn {
-            display: block;
-            text-align: center;
-            padding: 10px;
-            border-radius: 6px;
-            text-decoration: none;
-            font-size: 0.9rem;
-            font-weight: bold;
-            cursor: pointer;
-            border: 1px solid #ddd;
-            background: white;
-            color: #333;
-            transition: 0.2s;
-        }
+        .btn { display: block; text-align: center; padding: 10px; border-radius: 6px; font-weight: bold; cursor: pointer; border: 1px solid #ddd; background: white; color: #333; width: 100%; margin-top: 10px;}
         .btn-primary { background-color: #2563eb; color: white; border: none; }
         .btn-primary:hover { background-color: #1d4ed8; }
-        .btn-outline:hover { background-color: #f5f5f5; }
 
-        /* 画面切り替えエリア */
+        /* 各画面 */
         .view-section { display: none; background: white; padding: 30px; border-radius: 12px; text-align: left; margin-top: 20px; }
-        .view-section.active { display: block; }
-        .back-btn { margin-bottom: 20px; cursor: pointer; color: #2563eb; text-decoration: underline; background: none; border: none; font-size: 1rem;}
+        .back-btn { margin-bottom: 20px; cursor: pointer; color: #2563eb; text-decoration: underline; background: none; border: none; }
 
         /* アップロードエリア */
-        .upload-area {
-            border: 2px dashed #ccc; padding: 40px; text-align: center; border-radius: 10px; cursor: pointer;
-        }
+        .upload-area { border: 2px dashed #ccc; padding: 40px; text-align: center; border-radius: 10px; cursor: pointer; }
         .upload-area:hover { background-color: #fafafa; border-color: #2563eb; }
 
-        /* 履歴リスト画像 */
-        .receipt-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 10px; }
-        .receipt-item img { width: 100%; height: 100px; object-fit: cover; border-radius: 5px; border: 1px solid #eee; }
+        /* 設定フォーム */
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; margin-bottom: 5px; font-weight: bold; }
+        .form-group input { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; }
     </style>
 </head>
-<body>
+<body onload="loadStatus()">
 
     <div class="navbar">
-        <div class="logo">
-            <span style="background:#2563eb; color:white; padding:5px; border-radius:5px;">🧾</span>
-            <span>政務活動費 費目分別アプリ</span>
+        <div class="logo"><span style="background:#2563eb; color:white; padding:5px; border-radius:5px;">🧾</span><span>政務活動費アプリ</span></div>
+        <div style="font-size:0.9rem;">KENTARO TAKAHASHI</div>
+    </div>
+
+    <div class="status-bar">
+        <div class="status-item">
+            <span>今年度 収入:</span> <strong id="dispIncome">0</strong> 円
         </div>
-        <div class="user-info">KENTARO TAKAHASHI | ログアウト</div>
+        <div class="status-item">
+            <span>支出計(概算):</span> <strong id="dispExpenses">0</strong> 円
+        </div>
+        <div class="status-item">
+            <span>残額:</span> <strong id="dispBalance" class="balance-plus">0</strong> 円
+        </div>
     </div>
 
     <div class="container" id="dashboard">
         <h1>政務活動費の管理を簡単に</h1>
-        <p class="subtitle">
-            レシート画像をアップロードするだけで、自動的に費目を分別し、集計結果を確認できます。<br>
-            政務活動費の管理業務を効率化します。
-        </p>
+        <p class="subtitle">レシート画像をアップロードするだけで、自動的に費目を分別し、集計結果を確認できます。</p>
 
         <div class="grid">
             <div class="card">
-                <div>
-                    <div class="icon-box bg-blue">📤</div>
-                    <h3>レシートをアップロード</h3>
-                    <p>スマホで撮影したレシート画像をアップロードして、自動で情報を抽出します。</p>
-                </div>
+                <div><div class="icon-box bg-blue">📤</div><h3>レシート登録</h3><p>レシート画像をアップロードします。</p></div>
                 <button class="btn btn-primary" onclick="showView('upload-view')">アップロード</button>
             </div>
-
             <div class="card">
-                <div>
-                    <div class="icon-box bg-green">📄</div>
-                    <h3>レシート一覧</h3>
-                    <p>登録済みのレシートを確認・編集できます。費目や按分比率の変更も可能です。</p>
-                </div>
-                <button class="btn btn-outline" onclick="showView('list-view')">一覧を見る</button>
+                <div><div class="icon-box bg-green">📄</div><h3>レシート一覧</h3><p>登録済みの画像を確認します。</p></div>
+                <button class="btn" onclick="showView('list-view')">一覧を見る</button>
             </div>
-
             <div class="card">
-                <div>
-                    <div class="icon-box bg-purple">📊</div>
-                    <h3>集計結果</h3>
-                    <p>費目ごとの合計金額を確認できます。政務活動費の支出状況を一目で把握できます。</p>
-                </div>
-                <button class="btn btn-outline" onclick="showView('summary-view')">集計を見る</button>
+                <div><div class="icon-box bg-purple">📊</div><h3>集計結果</h3><p>費目ごとの合計を確認します。</p></div>
+                <button class="btn" onclick="showView('summary-view')">集計を見る</button>
             </div>
-
             <div class="card">
-                <div>
-                    <div class="icon-box bg-orange">⚙️</div>
-                    <h3>按分基準管理</h3>
-                    <p>費目ごとのデフォルト按分比率やキーワードを設定できます。</p>
-                </div>
-                <button class="btn btn-outline" onclick="alert('現在は設定画面は準備中です')">管理画面</button>
+                <div><div class="icon-box bg-orange">⚙️</div><h3>設定・基準管理</h3><p>収入設定や按分基準ファイルを管理します。</p></div>
+                <button class="btn" onclick="showView('settings-view')">設定を開く</button>
             </div>
         </div>
-
-        <h3 style="text-align: center; color: #333; margin-top: 50px;">主な機能</h3>
     </div>
 
     <div class="container view-section" id="upload-view">
-        <button class="back-btn" onclick="showDashboard()">← ダッシュボードに戻る</button>
+        <button class="back-btn" onclick="showDashboard()">← 戻る</button>
         <h2>📤 レシートのアップロード</h2>
         <div class="upload-area" onclick="document.getElementById('fileInput').click()">
-            <p>ここをクリックしてファイルを選択、またはドラッグ＆ドロップ</p>
+            <p>クリックして画像を選択、またはドラッグ＆ドロップ</p>
             <input type="file" id="fileInput" accept="image/*" style="display: none" onchange="uploadReceipt()">
         </div>
         <div id="uploadResult" style="margin-top: 20px; font-weight: bold;"></div>
     </div>
 
     <div class="container view-section" id="list-view">
-        <button class="back-btn" onclick="showDashboard()">← ダッシュボードに戻る</button>
+        <button class="back-btn" onclick="showDashboard()">← 戻る</button>
         <h2>📄 登録済みレシート一覧</h2>
-        <div id="gallery" class="receipt-list">読み込み中...</div>
+        <div id="gallery" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 10px;">読み込み中...</div>
     </div>
 
     <div class="container view-section" id="summary-view">
-        <button class="back-btn" onclick="showDashboard()">← ダッシュボードに戻る</button>
+        <button class="back-btn" onclick="showDashboard()">← 戻る</button>
         <h2>📊 支出集計（デモ）</h2>
-        <canvas id="expenseChart" width="400" height="200"></canvas>
+        <canvas id="expenseChart"></canvas>
+    </div>
+
+    <div class="container view-section" id="settings-view">
+        <button class="back-btn" onclick="showDashboard()">← 戻る</button>
+        <h2>⚙️ 設定・基準管理</h2>
+        
+        <div style="background:#f9f9f9; padding:20px; border-radius:10px; margin-bottom:20px;">
+            <h3>💰 収入（政務活動費 予算）の設定</h3>
+            <div class="form-group">
+                <label>今年度の受入額 (円)</label>
+                <input type="number" id="incomeInput" placeholder="例: 6000000">
+            </div>
+            <button class="btn btn-primary" onclick="saveIncome()">保存する</button>
+        </div>
+
+        <div style="background:#f9f9f9; padding:20px; border-radius:10px;">
+            <h3>📑 按分基準ファイルの登録</h3>
+            <p style="font-size:0.9rem; color:#666;">現在登録中: <strong id="currentCriteria">未設定</strong></p>
+            <div class="form-group">
+                <label>新しい基準ファイルをアップロード (CSV, PDFなど)</label>
+                <input type="file" id="criteriaInput">
+            </div>
+            <button class="btn btn-primary" onclick="uploadCriteria()">アップロード更新</button>
+        </div>
     </div>
 
     <script>
-        // 画面切り替え
-        function showView(viewId) {
+        // ステータス（収入・残高）読み込み
+        async function loadStatus() {
+            try {
+                const res = await fetch('/api/status');
+                const data = await res.json();
+                
+                document.getElementById('dispIncome').innerText = data.income.toLocaleString();
+                document.getElementById('dispExpenses').innerText = data.expenses.toLocaleString();
+                
+                const balEl = document.getElementById('dispBalance');
+                balEl.innerText = data.balance.toLocaleString();
+                balEl.className = data.balance >= 0 ? "balance-plus" : "balance-minus";
+
+                // 設定画面の表示も更新
+                document.getElementById('incomeInput').value = data.income;
+                document.getElementById('currentCriteria').innerText = data.criteria_file;
+
+            } catch(e) { console.error(e); }
+        }
+
+        // 収入を保存
+        async function saveIncome() {
+            const val = document.getElementById('incomeInput').value;
+            const formData = new FormData();
+            formData.append('income', val);
+            await fetch('/api/settings/income', { method: 'POST', body: formData });
+            alert("収入を保存しました");
+            loadStatus(); // 表示更新
+        }
+
+        // 基準ファイルをアップロード
+        async function uploadCriteria() {
+            const file = document.getElementById('criteriaInput').files[0];
+            if(!file) return;
+            const formData = new FormData();
+            formData.append('file', file);
+            await fetch('/api/settings/criteria', { method: 'POST', body: formData });
+            alert("基準ファイルを更新しました");
+            loadStatus();
+        }
+
+        // 画面切り替えなど既存機能
+        function showView(id) {
             document.getElementById('dashboard').style.display = 'none';
-            document.querySelectorAll('.view-section').forEach(el => el.style.display = 'none');
-            document.getElementById(viewId).style.display = 'block';
-
-            if(viewId === 'list-view') loadHistory();
-            if(viewId === 'summary-view') renderChart();
+            document.querySelectorAll('.view-section').forEach(e => e.style.display = 'none');
+            document.getElementById(id).style.display = 'block';
+            if(id === 'list-view') loadHistory();
+            if(id === 'summary-view') renderChart();
         }
-
         function showDashboard() {
-            document.querySelectorAll('.view-section').forEach(el => el.style.display = 'none');
+            document.querySelectorAll('.view-section').forEach(e => e.style.display = 'none');
             document.getElementById('dashboard').style.display = 'block';
+            loadStatus(); // 戻った時に最新情報を再取得
         }
-
-        // アップロード処理
-        async function uploadReceipt() {
+        
+        async function uploadReceipt() { /* (既存コードと同じ) */ 
             const fileInput = document.getElementById('fileInput');
             if (fileInput.files.length === 0) return;
-
             const formData = new FormData();
             formData.append("file", fileInput.files[0]);
-            
             document.getElementById('uploadResult').innerText = "⏳ アップロード中...";
-
             try {
                 const res = await fetch('/api/ocr/upload', { method: 'POST', body: formData });
                 if(res.ok) {
                     const data = await res.json();
                     document.getElementById('uploadResult').innerText = "✅ 保存成功: " + data.filename;
-                    document.getElementById('uploadResult').style.color = "green";
-                } else {
-                    throw new Error("Error");
+                    loadStatus(); // ファイル数が増えたので支出（仮）を更新
                 }
-            } catch(e) {
-                document.getElementById('uploadResult').innerText = "❌ エラーが発生しました";
-                document.getElementById('uploadResult').style.color = "red";
-            }
+            } catch(e) { document.getElementById('uploadResult').innerText = "❌ エラー"; }
         }
 
-        // 履歴読み込み
-        async function loadHistory() {
+        async function loadHistory() { /* (既存コードと同じ) */
             const gallery = document.getElementById('gallery');
             gallery.innerHTML = "読み込み中...";
             const res = await fetch('/api/ocr/list');
             const data = await res.json();
             gallery.innerHTML = "";
-            
-            if(data.files.length === 0) gallery.innerHTML = "まだ画像がありません";
-
             data.files.forEach(file => {
                 const div = document.createElement('div');
-                div.className = 'receipt-item';
-                div.innerHTML = `<a href="/uploads/${file}" target="_blank"><img src="/uploads/${file}"></a>`;
+                div.innerHTML = `<a href="/uploads/${file}" target="_blank"><img src="/uploads/${file}" style="width:100%; border-radius:5px;"></a>`;
                 gallery.appendChild(div);
             });
         }
 
-        // グラフ描画（ダミーデータ）
-        function renderChart() {
+        function renderChart() { /* (既存コードと同じ) */
             const ctx = document.getElementById('expenseChart').getContext('2d');
-            // すでにチャートがある場合は破棄（二重描画防止）
             if(window.myChart) window.myChart.destroy();
-
             window.myChart = new Chart(ctx, {
                 type: 'bar',
                 data: {
-                    labels: ['調査研究費', '研修費', '広聴広報費', '要請陳情等活動費', '会議費', '資料作成費'],
-                    datasets: [{
-                        label: '支出額 (円)',
-                        data: [12000, 5000, 30000, 8000, 1500, 20000], // ここはまだダミーです
-                        backgroundColor: '#2563eb'
-                    }]
-                },
-                options: { scales: { y: { beginAtZero: true } } }
+                    labels: ['調査研究費', '研修費', '広聴広報費', '会議費', '資料作成費'],
+                    datasets: [{ label: '支出額 (円)', data: [12000, 5000, 30000, 1500, 20000], backgroundColor: '#2563eb' }]
+                }
             });
         }
     </script>
